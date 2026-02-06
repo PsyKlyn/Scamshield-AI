@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ScamShield AI - India</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .container { max-width: 400px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; color: white; margin-bottom: 30px; }
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        textarea { width: 100%; padding: 15px; border: 2px solid #e1e5e9; border-radius: 12px; font-size: 16px; resize: vertical; min-height: 120px; }
+        .btn { background: #25D366; color: white; border: none; padding: 15px 25px; border-radius: 12px; font-size: 16px; font-weight: 600; width: 100%; cursor: pointer; margin: 10px 0; }
+        .btn:hover { background: #128C7E; }
+        .result { padding: 20px; border-radius: 12px; margin-top: 15px; text-align: center; font-weight: 600; }
+        .safe { background: #d4edda; color: #155724; }
+        .scam { background: #f8d7da; color: #721c24; }
+        .whatsapp-mode { background: #075e54; color: white; padding: 15px; border-radius: 12px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 ScamShield AI</h1>
+            <p>India's #1 Scam Detector</p>
+        </div>
+        
+        <div class="card">
+            <textarea id="messageInput" placeholder="📱 Paste WhatsApp forward, SMS, or email here..."></textarea>
+            <button class="btn" onclick="scanMessage()">🚀 Instant Scan</button>
+            
+            <div class="whatsapp-mode">
+                <strong>💬 WhatsApp Mode:</strong> Paste multiple forwards separated by --- 
+            </div>
+            
+            <input type="file" id="imageUpload" accept="image/*" style="display:none;">
+            <button class="btn" onclick="document.getElementById('imageUpload').click()">🖼️ Scan Image (Deepfake)</button>
+            
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Mobile-optimized scanner
+        async function scanMessage() {
+            const text = document.getElementById('messageInput').value;
+            if (!text.trim()) return alert('Please enter a message');
+            
+            showResult('🔄 Scanning with AI...', 'info');
+            
+            try {
+                // Check if multiple WhatsApp messages
+                if (text.includes('---')) {
+                    const messages = text.split('---').map(m => m.trim()).filter(m => m);
+                    const response = await fetch('http://localhost:5000/api/scan/whatsapp', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({messages})
+                    });
+                    const data = await response.json();
+                    showWhatsAppResult(data);
+                } else {
+                    const response = await fetch('http://localhost:5000/api/scan/text', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({text})
+                    });
+                    const data = await response.json();
+                    showResult(data.result, data.result.risk_level);
+                }
+            } catch(e) {
+                showResult('❌ Server offline. Use offline mode or check connection.', 'error');
+            }
+        }
+        
+        function showResult(result, type) {
+            const resultDiv = document.getElementById('result');
+            const className = type === 'SAFE' ? 'safe' : type === 'SCAM' ? 'scam' : 'info';
+            const emoji = type === 'SAFE' ? '✅' : type === 'SCAM' ? '🚨' : '⚠️';
+            
+            resultDiv.innerHTML = `
+                <div class="result ${className}">
+                    ${emoji} <strong>${result.risk_level}</strong><br>
+                    Score: ${result.risk_score}/10<br>
+                    ${result.patterns_detected?.length ? `Detected: ${result.patterns_detected.join(', ')}` : ''}
+                </div>
+            `;
+            resultDiv.style.display = 'block';
+        }
+        
+        document.getElementById('imageUpload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            showResult('🔍 Analyzing image for deepfakes...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/scan/image', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                showResult(data.result, data.result.risk_level);
+            } catch(e) {
+                showResult('❌ Image analysis failed', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

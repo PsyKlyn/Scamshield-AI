@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { width: 350px; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        .scan-btn { background: #25D366; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        .scan-btn:hover { background: #128C7E; }
+        .result { margin-top: 15px; padding: 12px; border-radius: 8px; }
+        .safe { background: #D4EDDA; color: #155724; }
+        .scam { background: #F8D7DA; color: #721C24; font-weight: bold; }
+        .upload-area { border: 2px dashed #ccc; padding: 20px; text-align: center; margin: 10px 0; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h3>🔐 ScamShield AI</h3>
+    <textarea id="textInput" placeholder="Paste WhatsApp message or SMS here..." rows="4" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px;"></textarea>
+    <button class="scan-btn" onclick="scanText()">🚀 Scan Text</button>
+    
+    <div class="upload-area" onclick="document.getElementById('imageInput').click()">
+        📷 Upload Image/Video for Deepfake Check
+        <input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="scanImage(event)">
+    </div>
+    
+    <div id="result"></div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>

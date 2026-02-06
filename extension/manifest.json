@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "ScamShield AI - India Scam Detector",
+  "version": "1.0",
+  "description": "AI-powered detection of WhatsApp scams, fake news & deepfakes",
+  "permissions": ["activeTab", "storage", "contextMenus"],
+  "host_permissions": ["*://*/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [{
+    "matches": ["https://web.whatsapp.com/*", "https://*.whatsapp.com/*"],
+    "js": ["content.js"]
+  }],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Scan for Scams"
+  },
+  "icons": {
+    "16": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwY...",
+    "48": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwY...",
+    "128": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAAsTAAALEwEAmpwY..."
+  },
+  "contextMenus": [{
+    "id": "scan-selection",
+    "title": "🔍 Scan this text for scams",
+    "contexts": ["selection"]
+  }]
+}
