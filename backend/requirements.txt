@@ -1,7 +1,7 @@
 --index-url https://download.pytorch.org/whl/cpu
 torch==2.7.0
-torchvision==0.19.1+cpu
-torchaudio==2.4.1+cpu
+torchvision==0.22.1
+torchaudio==2.4.1
 --index-url https://pypi.org/simple
 flask==3.0.3
 flask-cors==5.0.0
