@@ -39,75 +39,94 @@
             <div id="result"></div>
         </div>
     </div>
-
     <script>
-        // Mobile-optimized scanner
-        async function scanMessage() {
-            const text = document.getElementById('messageInput').value;
-            if (!text.trim()) return alert('Please enter a message');
-            
-            showResult('🔄 Scanning with AI...', 'info');
-            
-            try {
-                // Check if multiple WhatsApp messages
-                if (text.includes('---')) {
-                    const messages = text.split('---').map(m => m.trim()).filter(m => m);
-                    const response = await fetch('http://localhost:5000/api/scan/whatsapp', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({messages})
-                    });
-                    const data = await response.json();
-                    showWhatsAppResult(data);
-                } else {
-                    const response = await fetch('http://localhost:5000/api/scan/text', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({text})
-                    });
-                    const data = await response.json();
-                    showResult(data.result, data.result.risk_level);
-                }
-            } catch(e) {
-                showResult('❌ Server offline. Use offline mode or check connection.', 'error');
-            }
+const API_BASE = 'https://scamshield-ai-1.onrender.com';
+
+// Mobile-optimized scanner
+async function scanMessage() {
+    const text = document.getElementById('messageInput').value;
+    if (!text.trim()) return alert('Please enter a message');
+
+    showResult({ risk_level: 'INFO', risk_score: 0 }, 'Scanning with AI...');
+
+    try {
+        let response, data;
+
+        // Check if multiple WhatsApp messages
+        if (text.includes('---')) {
+            const messages = text.split('---').map(m => m.trim()).filter(m => m);
+            response = await fetch(`${API_BASE}/api/scan/whatsapp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages })
+            });
+            data = await response.json();
+            showWhatsAppResult(data);
+        } else {
+            response = await fetch(`${API_BASE}/api/scan/text`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+            data = await response.json();
+            showResult(data.result);
         }
-        
-        function showResult(result, type) {
-            const resultDiv = document.getElementById('result');
-            const className = type === 'SAFE' ? 'safe' : type === 'SCAM' ? 'scam' : 'info';
-            const emoji = type === 'SAFE' ? '✅' : type === 'SCAM' ? '🚨' : '⚠️';
-            
-            resultDiv.innerHTML = `
-                <div class="result ${className}">
-                    ${emoji} <strong>${result.risk_level}</strong><br>
-                    Score: ${result.risk_score}/10<br>
-                    ${result.patterns_detected?.length ? `Detected: ${result.patterns_detected.join(', ')}` : ''}
-                </div>
-            `;
-            resultDiv.style.display = 'block';
-        }
-        
-        document.getElementById('imageUpload').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            const formData = new FormData();
-            formData.append('image', file);
-            
-            showResult('🔍 Analyzing image for deepfakes...', 'info');
-            
-            try {
-                const response = await fetch('http://localhost:5000/api/scan/image', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                showResult(data.result, data.result.risk_level);
-            } catch(e) {
-                showResult('❌ Image analysis failed', 'error');
-            }
+    } catch (e) {
+        console.error(e);
+        showResult({ risk_level: 'ERROR', risk_score: 0, patterns_detected: [] });
+    }
+}
+
+function showResult(result) {
+    const resultDiv = document.getElementById('result');
+    const type = result.risk_level;
+    const className = type === 'SAFE' ? 'safe' : type === 'SCAM' ? 'scam' : 'info';
+    const emoji = type === 'SAFE' ? '✅' : type === 'SCAM' ? '🚨' : '⚠️';
+
+    resultDiv.innerHTML = `
+        <div class="result ${className}">
+            ${emoji} <strong>${type}</strong><br>
+            Score: ${result.risk_score}/10<br>
+            ${result.patterns_detected?.length ? `Detected: ${result.patterns_detected.join(', ')}` : ''}
+        </div>
+    `;
+    resultDiv.style.display = 'block';
+}
+
+function showWhatsAppResult(data) {
+    const resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = data.results.map(r => `
+        <div class="result ${r.risk_level === 'SAFE' ? 'safe' : 'scam'}">
+            ${r.risk_level} - Score: ${r.risk_score}/10
+            ${r.patterns_detected?.length ? `<br>Detected: ${r.patterns_detected.join(', ')}` : ''}
+        </div>
+    `).join('');
+    resultDiv.style.display = 'block';
+}
+
+document.getElementById('imageUpload').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    showResult({ risk_level: 'INFO', risk_score: 0 }, 'Analyzing image for deepfakes...');
+
+    try {
+        const response = await fetch(`${API_BASE}/api/scan/image`, {
+            method: 'POST',
+            body: formData
         });
-    </script>
+        const data = await response.json();
+        showResult(data.result);
+    } catch (e) {
+        console.error(e);
+        showResult({ risk_level: 'ERROR', risk_score: 0, patterns_detected: [] });
+    }
+});
+</script>
+
+    
 </body>
 </html>
